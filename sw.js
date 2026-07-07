@@ -1,4 +1,4 @@
-const CACHE = 'pucciotto-heist-v3';
+const CACHE = 'pucciotto-heist-v4';
 const FILES = ['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png',
   './assets/Variant__Female_cyber_ninja.png','./assets/Variant__Male_augmented_bounty_hunter.png',
   './assets/Variant__Masked_street_hacker.png',

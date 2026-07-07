@@ -102,6 +102,19 @@
   #touch button.grande{width:74px;height:74px;border-color:var(--pink)}
   #touch button.abilB{border-color:var(--viola);font-size:16px;letter-spacing:.05em}
   body.touchmode #touch{display:flex}
+  @media (max-width:520px){
+    #hud{font-size:10.5px;padding-left:10px;padding-right:10px}
+    #hud .grp{gap:10px}
+    #hud b{font-size:13px}
+    #obiettivo{font-size:8px;max-width:72vw;left:10px}
+    #touch button{width:56px;height:56px;font-size:21px}
+    #touch button.grande{width:68px;height:68px}
+    .sub{font-size:11px}
+    .cmd{display:none}
+  }
+  #ruota{position:fixed;bottom:calc(96px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:44;
+    background:rgba(13,18,32,.9);border:1px solid #33415f;color:#cfe3ff;padding:9px 16px;border-radius:20px;
+    font-size:11px;letter-spacing:.06em;display:none;pointer-events:none;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -116,6 +129,7 @@
 <div id="obiettivo"></div>
 <div id="toast"></div>
 <div id="annuncio"></div>
+<div id="ruota">📱↻ Ruota in orizzontale per una visuale migliore</div>
 
 <div id="touch">
   <div class="lato"><button data-k="left">◀</button><button data-k="right">▶</button></div>
@@ -850,8 +864,15 @@ function aggiornaGioco(dt){
   if(P.piano===L.piani-1&&Math.abs(P.x-M.boxX)<1.1){fineLivello();return;}
 
   const cy=Math.max(3.2,P.y+2.2);
-  camera.position.lerp(new THREE.Vector3(P.x*.18,cy,15.5),Math.min(1,5*dt));
-  camera.lookAt(P.x*.12,cy-1.1,0);
+  /* camera adattiva: su schermi stretti si allontana e segue il giocatore in orizzontale */
+  const halfW=Math.tan(THREE.MathUtils.degToRad(camera.fov/2))*camera.aspect;
+  let dist=15.5, half=halfW*dist;
+  if(half<7.6){ dist=7.6/halfW; half=7.6; }
+  let cx;
+  if(half>=LARG+1.2){ cx=P.x*.18; }
+  else { const maxOff=LARG+1.2-half; cx=Math.max(-maxOff,Math.min(maxOff,P.x)); }
+  camera.position.lerp(new THREE.Vector3(cx,cy,dist),Math.min(1,5*dt));
+  camera.lookAt(camera.position.x,cy-1.1,0);
 }
 
 function fineLivello(){
@@ -911,6 +932,9 @@ function avviaLivello(idx){
   S.livello=idx;S.fase='gioco';
   ['sTitolo','sPremio','sOver','sFine','sPausa'].forEach(id=>$(id).classList.add('hidden'));
   $('hud').style.display='flex';$('obiettivo').style.display='block';
+  if(document.body.classList.contains('touchmode')&&matchMedia('(orientation: portrait)').matches){
+    const r=$('ruota'); r.style.display='block'; clearTimeout(r._t); r._t=setTimeout(()=>r.style.display='none',4000);
+  }
   costruisciLivello(idx);
 }
 document.querySelectorAll('.card').forEach(c=>{
