@@ -1,0 +1,14 @@
+{
+  "name": "Pucciotto Heist 2077",
+  "short_name": "Pucciotto Heist",
+  "description": "Mini-gioco arcade 3D cyberpunk: ruba i premi alla Pucciotto Corp!",
+  "start_url": "./index.html",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#05070c",
+  "theme_color": "#05070c",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
