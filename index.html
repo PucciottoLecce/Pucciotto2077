@@ -73,6 +73,11 @@
   #hud b{color:var(--gold);font-size:15px}
   #hud .lv{color:var(--cyan)} #hud .vite{color:var(--pink);font-size:14px}
   #hud .cd{color:var(--viola)}
+  #btnPausa{pointer-events:auto;background:rgba(13,18,32,.72);border:1px solid #33415f;color:#cfe3ff;
+    width:34px;height:34px;border-radius:8px;font-family:inherit;font-size:15px;cursor:pointer;line-height:1}
+  #btnPausa:hover{border-color:var(--cyan);color:var(--cyan)}
+  .btn.secondario{border-color:#33415f;color:var(--grigio)}
+  .btn.secondario:hover{background:#1a2338;box-shadow:none;color:#fff}
   #obiettivo{position:fixed;top:calc(42px + env(safe-area-inset-top));left:14px;z-index:40;display:none;font-size:9.5px;color:var(--grigio);letter-spacing:.1em}
   #toast{position:fixed;top:22%;left:50%;transform:translateX(-50%);z-index:45;font-size:20px;color:var(--gold);
     text-shadow:0 0 14px var(--gold);opacity:0;transition:opacity .2s;pointer-events:none;letter-spacing:.1em;white-space:nowrap}
@@ -106,7 +111,7 @@
 
 <div id="hud">
   <div class="grp"><span class="lv" id="hLv">LV 1</span><span>PUNTI <b id="hPunti">0</b></span><span id="hTempo">0s</span></div>
-  <div class="grp"><span class="cd" id="hCd"></span><span class="vite" id="hVite">♥♥♥</span></div>
+  <div class="grp"><span class="cd" id="hCd"></span><span class="vite" id="hVite">♥♥♥</span><button id="btnPausa" title="Pausa / Menù">⏸</button></div>
 </div>
 <div id="obiettivo"></div>
 <div id="toast"></div>
@@ -159,12 +164,23 @@
   <button class="btn gold" id="btnNext">Livello successivo →</button>
 </div>
 
+<!-- PAUSA -->
+<div id="sPausa" class="overlay hidden">
+  <div class="tag">Pausa</div>
+  <h1 class="logo" style="font-size:clamp(22px,5vw,42px)">CONNESSIONE<br><span>SOSPESA</span></h1>
+  <div class="righe">Livello <b id="paLv">1</b> · Punti <b id="paPunti">0</b></div>
+  <button class="btn gold" id="btnRiprendi">▶ Riprendi</button>
+  <button class="btn" id="btnRestartLv">↻ Ricomincia livello</button>
+  <button class="btn secondario" id="btnMenu">✕ Esci al menù</button>
+</div>
+
 <!-- GAME OVER -->
 <div id="sOver" class="overlay hidden">
   <div class="logoGlitch"><img class="soloOver" alt=""><img class="g1" aria-hidden="true"><img class="g2" aria-hidden="true"></div>
   <h1 class="logo" style="color:#ff4b4b;text-shadow:0 0 18px #ff4b4b">FLATLINE</h1>
   <div class="righe">La sicurezza della Pucciotto Corp ti ha steso.<br>Punteggio: <b id="oPunti">0</b></div>
   <button class="btn" id="btnRetry">Riprova il livello</button>
+  <button class="btn secondario" id="btnMenuOver">✕ Esci al menù</button>
 </div>
 
 <!-- FINALE -->
@@ -590,6 +606,7 @@ addEventListener('keydown',e=>{
   if(mappaTasti[k]) S.tasti[mappaTasti[k]]=true;
   if(k===' '&&!e.repeat) S.jumpEdge=true;
   if(k==='e'&&!e.repeat) S.abilEdge=true;
+  if(k==='escape'&&!e.repeat){ if(S.fase==='gioco') pausa(); else if(S.fase==='pausa') riprendi(); }
 });
 addEventListener('keyup',e=>{
   const k=e.key.toLowerCase();
@@ -859,9 +876,40 @@ function fineLivello(){
 }
 
 /* ============================== FLOW ============================== */
+function pausa(){
+  if(S.fase!=='gioco') return;
+  S.fase='pausa'; S.tasti={};
+  $('paLv').textContent=S.livello+1; $('paPunti').textContent=S.punti;
+  $('sPausa').classList.remove('hidden');
+  beep(500,300,.12,'triangle',.08);
+}
+function riprendi(){
+  if(S.fase!=='pausa') return;
+  S.fase='gioco'; $('sPausa').classList.add('hidden');
+  beep(300,500,.12,'triangle',.08);
+}
+function esciAlMenu(){
+  S.fase='titolo'; S.tasti={};
+  ['sPausa','sPremio','sOver','sFine'].forEach(id=>$(id).classList.add('hidden'));
+  $('hud').style.display='none'; $('obiettivo').style.display='none';
+  pulisci(); mondo=null;
+  renderer.setClearColor(0x05070c);
+  camera.position.set(0,4,15); camera.lookAt(0,3,0);
+  $('sTitolo').classList.remove('hidden');
+}
+$('btnPausa').addEventListener('click',pausa);
+$('btnRiprendi').addEventListener('click',riprendi);
+$('btnRestartLv').addEventListener('click',()=>{
+  $('sPausa').classList.add('hidden');
+  S.vite=3; S.punti=S.puntiInizioLivello; $('hPunti').textContent=S.punti;
+  avviaLivello(S.livello);
+});
+$('btnMenu').addEventListener('click',esciAlMenu);
+$('btnMenuOver').addEventListener('click',esciAlMenu);
+
 function avviaLivello(idx){
   S.livello=idx;S.fase='gioco';
-  ['sTitolo','sPremio','sOver','sFine'].forEach(id=>$(id).classList.add('hidden'));
+  ['sTitolo','sPremio','sOver','sFine','sPausa'].forEach(id=>$(id).classList.add('hidden'));
   $('hud').style.display='flex';$('obiettivo').style.display='block';
   costruisciLivello(idx);
 }
